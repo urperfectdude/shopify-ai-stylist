@@ -80,34 +80,16 @@ flowchart LR
 
 ### System Flow
 
-Merchant installs app  
-↓  
-Catalog sync begins  
-↓  
-AI extracts attributes + embeddings  
-↓  
-Outfit graph generated  
-↓  
-Customer views product  
-↓  
-Outfit widget appears  
-↓  
-User clicks “Imagine on Me” (optional)  
-↓  
-Avatar generated (default or personalized)  
-↓  
-Customer adds multiple items to cart
-
 ```mermaid
 flowchart TD
   A[Merchant installs app] --> B[Catalog sync begins]
-  B --> C[AI extracts attributes and embeddings]
+  B --> C[AI attribute extraction]
   C --> D[Outfit graph generated]
   D --> E[Customer views product]
   E --> F[Outfit widget appears]
-  F --> G[User clicks Imagine on Me (optional)]
-  G --> H[Avatar generated - default or personalized]
-  H --> I[Customer adds multiple items to cart]
+  F --> G[User clicks Imagine on Me]
+  G --> H[Avatar generated]
+  H --> I[Customer adds items to cart]
 ```
 
 ### Key Components
@@ -219,16 +201,12 @@ This should be the **default, zero-friction** experience.
 
 ```mermaid
 flowchart TD
-  A[Shopper views product page] --> B[Widget loads - outfit widget]
-  B -->|Clicks "See it on a model"| C[Request outfit + default avatar from backend]
-  C --> D{Outfit + image cached?}
-  D -->|Yes| E[Render outfit image on default model]
-  D -->|No| F[Show fallback/default state and trigger async generation]
-  F --> G[Backend generates image via Gemini and stores in Supabase/CDN]
-  G --> E
-  E --> H[Shopper selects items from outfit]
-  H --> I[Add multiple items to Shopify cart]
-  I --> J[Checkout in Shopify]
+  A[Shopper views product page] --> B[Widget loads]
+  B --> C[Request outfit and default avatar]
+  C --> D[Render outfit image]
+  D --> E[Shopper selects items]
+  E --> F[Add items to Shopify cart]
+  F --> G[Shopper checks out]
 ```
 
 ### Personalized Experience (“Imagine On Me”)
