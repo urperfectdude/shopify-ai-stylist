@@ -55,27 +55,27 @@ This is not just a recommendation widget — it is a **visual AI commerce engine
 ```mermaid
 flowchart LR
   subgraph Shopify
-    Storefront[Shopify Storefront]
-    Admin[Shopify Admin]
+    sf[Shopify storefront]
+    sa[Shopify admin]
   end
 
-  Shopper[Shopper Browser - Product Page Widget]
-  Backend[App Backend (Railway)]
-  Supabase[(Supabase DB/Auth/Storage)]
-  Gemini[(Gemini AI APIs)]
-  CDN[(CDN / Image Delivery)]
-  GitHub[(GitHub CI/CD)]
+  shopper[Shopper widget]
+  backend[App backend on Railway]
+  supabase[(Supabase)]
+  gemini[(Gemini AI)]
+  cdn[(Image CDN)]
+  github[(GitHub CI/CD)]
 
-  Shopper <---> Storefront
-  Admin --> Backend
-  Storefront --> Shopper
+  shopper <---> sf
+  sa --> backend
+  sf --> shopper
 
-  Shopper --> Backend
-  Backend --> Supabase
-  Backend --> Gemini
-  Backend --> CDN
+  shopper --> backend
+  backend --> supabase
+  backend --> gemini
+  backend --> cdn
 
-  GitHub --> Backend
+  github --> backend
 ```
 
 ### System Flow
