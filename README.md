@@ -59,12 +59,12 @@ flowchart LR
     Admin[Shopify Admin]
   end
 
-  Shopper[Shopper Browser\nProduct Page + Widget]
-  Backend[App Backend\nRailway]
-  Supabase[(Supabase\nDB + Auth + Storage)]
-  Gemini[(Gemini\nAI APIs)]
+  Shopper[Shopper Browser - Product Page Widget]
+  Backend[App Backend (Railway)]
+  Supabase[(Supabase DB/Auth/Storage)]
+  Gemini[(Gemini AI APIs)]
   CDN[(CDN / Image Delivery)]
-  GitHub[(GitHub\nCI/CD)]
+  GitHub[(GitHub CI/CD)]
 
   Shopper <---> Storefront
   Admin --> Backend
@@ -97,6 +97,18 @@ User clicks “Imagine on Me” (optional)
 Avatar generated (default or personalized)  
 ↓  
 Customer adds multiple items to cart
+
+```mermaid
+flowchart TD
+  A[Merchant installs app] --> B[Catalog sync begins]
+  B --> C[AI extracts attributes and embeddings]
+  C --> D[Outfit graph generated]
+  D --> E[Customer views product]
+  E --> F[Outfit widget appears]
+  F --> G[User clicks Imagine on Me (optional)]
+  G --> H[Avatar generated - default or personalized]
+  H --> I[Customer adds multiple items to cart]
+```
 
 ### Key Components
 
@@ -207,12 +219,12 @@ This should be the **default, zero-friction** experience.
 
 ```mermaid
 flowchart TD
-  A[Shopper views product page] --> B[Widget loads\n(Complete the Look / See it on a model)]
+  A[Shopper views product page] --> B[Widget loads - outfit widget]
   B -->|Clicks "See it on a model"| C[Request outfit + default avatar from backend]
-  C --> D[Outfit + image already cached?]
+  C --> D{Outfit + image cached?}
   D -->|Yes| E[Render outfit image on default model]
-  D -->|No| F[Show fallback/default state\nTrigger async generation]
-  F --> G[Backend generates image via Gemini\nStores in Supabase + CDN]
+  D -->|No| F[Show fallback/default state and trigger async generation]
+  F --> G[Backend generates image via Gemini and stores in Supabase/CDN]
   G --> E
   E --> H[Shopper selects items from outfit]
   H --> I[Add multiple items to Shopify cart]
@@ -244,7 +256,7 @@ sequenceDiagram
   participant AI as Gemini (Avatar + Image)
 
   Shopper->>Widget: Click "Imagine On Me"
-  Widget->>Shopper: Show onboarding modal\n(selfie + body data)
+  Widget->>Shopper: Show onboarding modal (selfie + body data)
   Shopper->>Widget: Submit avatar details
   Widget->>Backend: Create/Update avatar profile
   Backend->>DB: Store avatar metadata + selfie URL
