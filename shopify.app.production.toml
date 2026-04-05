@@ -1,0 +1,43 @@
+# Production Shopify app configuration for Cloudflare-hosted AI Stylist.
+
+name = "AI Stylist"
+client_id = "6e0d92f91c6fa1cca9276e56c67d0bda"
+application_url = "https://ai-stylist.ai-stylist.workers.dev"
+embedded = true
+handle = "ai-stylist"
+
+[access_scopes]
+scopes = "read_products"
+
+[auth]
+redirect_urls = [
+  "https://ai-stylist.ai-stylist.workers.dev/auth/callback",
+  "https://ai-stylist.ai-stylist.workers.dev/auth/shopify/callback",
+  "https://ai-stylist.ai-stylist.workers.dev/api/auth/callback",
+]
+
+[webhooks]
+api_version = "2026-04"
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = ["app/uninstalled"]
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/data_request"
+  compliance_topics = ["customers/data_request"]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/redact"
+  compliance_topics = ["customers/redact"]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/shop/redact"
+  compliance_topics = ["shop/redact"]
+
+[build]
+automatically_update_urls_on_dev = false

@@ -1,0 +1,54 @@
+{% assign ai_stylist_api_url = block.settings.api_url | default: app.metafields.ai_stylist.app_url %}
+
+<div
+  class="ai-stylist-block"
+  data-ai-stylist
+  data-surface="home"
+  data-api-url="{{ ai_stylist_api_url | escape }}"
+  data-shop-domain="{{ shop.permanent_domain | escape }}"
+>
+  <div class="ai-stylist-block__shell">
+    <p class="ai-stylist-block__eyebrow">AI Stylist</p>
+    <h3 class="ai-stylist-block__title">{{ block.settings.heading }}</h3>
+    <p class="ai-stylist-block__copy">{{ block.settings.description }}</p>
+    <button type="button" class="ai-stylist-block__button" data-ai-stylist-generate>
+      {{ block.settings.button_label }}
+    </button>
+    <div class="ai-stylist-block__results" data-ai-stylist-results></div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "AI Stylist home",
+  "target": "section",
+  "stylesheet": "ai-stylist.css",
+  "javascript": "ai-stylist.js",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Find your next outfit instantly"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Description",
+      "default": "Collect shopper style preferences and generate product-led outfit recommendations directly on the storefront."
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Generate outfits"
+    },
+    {
+      "type": "text",
+      "id": "api_url",
+      "label": "AI Stylist app URL",
+      "info": "Optional override. Defaults to the app URL exposed by your app."
+    }
+  ]
+}
+{% endschema %}

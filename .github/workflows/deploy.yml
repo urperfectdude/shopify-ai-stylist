@@ -1,0 +1,74 @@
+name: Deploy AI Stylist
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
+      SHOPIFY_API_KEY: ${{ secrets.SHOPIFY_API_KEY }}
+      SHOPIFY_API_SECRET: ${{ secrets.SHOPIFY_API_SECRET }}
+      SHOPIFY_APP_URL: ${{ secrets.SHOPIFY_APP_URL }}
+      SHOPIFY_SHOP_DOMAIN: ${{ secrets.SHOPIFY_SHOP_DOMAIN }}
+      SHOPIFY_API_VERSION: ${{ secrets.SHOPIFY_API_VERSION }}
+      SCOPES: ${{ secrets.SCOPES }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SHOPIFY_BILLING_PLAN_NAME: ${{ secrets.SHOPIFY_BILLING_PLAN_NAME }}
+      SHOPIFY_BILLING_AMOUNT: ${{ secrets.SHOPIFY_BILLING_AMOUNT }}
+      SHOPIFY_BILLING_CURRENCY: ${{ secrets.SHOPIFY_BILLING_CURRENCY }}
+      SHOPIFY_BILLING_INTERVAL: ${{ secrets.SHOPIFY_BILLING_INTERVAL }}
+      SHOPIFY_BILLING_TEST_MODE: ${{ secrets.SHOPIFY_BILLING_TEST_MODE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate application
+        run: npm run check
+
+      - name: Build Cloudflare worker bundle
+        run: npx opennextjs-cloudflare build
+
+      - name: Deploy to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx opennextjs-cloudflare deploy
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: deploy-${{ github.run_number }}
+          name: AI Stylist deploy ${{ github.run_number }}
+          body: |
+            Automated deployment for commit `${{ github.sha }}`.
+
+            Cloudflare deployment completed successfully.
+            Source commit: ${{ env.COMMIT_URL }}
+
+      - name: Install Shopify CLI
+        if: ${{ secrets.SHOPIFY_CLI_PARTNERS_TOKEN != '' && hashFiles('shopify.app.production.toml') != '' }}
+        run: npm install -g @shopify/cli@latest
+
+      - name: Deploy Shopify app configuration
+        if: ${{ secrets.SHOPIFY_CLI_PARTNERS_TOKEN != '' && hashFiles('shopify.app.production.toml') != '' }}
+        env:
+          SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_CLI_PARTNERS_TOKEN }}
+        run: shopify app deploy --config production --allow-updates --source-control-url "$COMMIT_URL"

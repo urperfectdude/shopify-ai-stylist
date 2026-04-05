@@ -1,0 +1,88 @@
+{% assign ai_stylist_api_url = block.settings.api_url | default: app.metafields.ai_stylist.app_url %}
+
+{% capture ai_stylist_product_json %}
+[
+  {
+    "id": "{{ product.admin_graphql_api_id }}",
+    "handle": "{{ product.handle | escape }}",
+    "title": {{ product.title | json }},
+    "vendor": {{ product.vendor | json }},
+    "productType": {{ product.type | json }},
+    "price": {{ product.price | money_without_currency | replace: ',', '' | json }},
+    "tags": {{ product.tags | json }},
+    "url": {{ product.url | json }},
+    "variants": [
+      {% for variant in product.variants %}
+        {
+          "id": "{{ variant.id }}",
+          "title": {{ variant.title | json }},
+          "price": {{ variant.price | money_without_currency | replace: ',', '' | json }},
+          "available": {{ variant.available | json }}
+        }{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    ]
+  }
+]
+{% endcapture %}
+
+<div
+  class="ai-stylist-block"
+  data-ai-stylist
+  data-surface="product"
+  data-api-url="{{ ai_stylist_api_url | escape }}"
+  data-shop-domain="{{ shop.permanent_domain | escape }}"
+  data-handle="{{ product.handle | escape }}"
+  data-seed-product-id="{{ product.admin_graphql_api_id }}"
+  data-products='{{ ai_stylist_product_json | strip_newlines | escape }}'
+>
+  <div class="ai-stylist-block__shell">
+    <p class="ai-stylist-block__eyebrow">AI Stylist</p>
+    <h3 class="ai-stylist-block__title">{{ block.settings.heading }}</h3>
+    <p class="ai-stylist-block__copy">{{ block.settings.description }}</p>
+    <input
+      class="ai-stylist-block__file"
+      accept="image/*"
+      data-ai-stylist-selfie
+      type="file"
+    >
+    <button type="button" class="ai-stylist-block__button" data-ai-stylist-try-on>
+      {{ block.settings.button_label }}
+    </button>
+    <div class="ai-stylist-block__results" data-ai-stylist-results></div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "AI Stylist PDP",
+  "target": "section",
+  "stylesheet": "ai-stylist.css",
+  "javascript": "ai-stylist.js",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Style this product"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Description",
+      "default": "Upload a shopper selfie and generate a simple AI try-on preview for the current product."
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Try on me"
+    },
+    {
+      "type": "text",
+      "id": "api_url",
+      "label": "AI Stylist app URL",
+      "info": "Optional override. Defaults to the app URL exposed by your app."
+    }
+  ]
+}
+{% endschema %}

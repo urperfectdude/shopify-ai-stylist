@@ -1,0 +1,83 @@
+.ai-stylist-block {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.96));
+  color: #0f172a;
+  padding: 24px;
+}
+
+.ai-stylist-block__shell {
+  display: grid;
+  gap: 12px;
+}
+
+.ai-stylist-block__eyebrow {
+  margin: 0;
+  color: #7c3aed;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ai-stylist-block__title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.ai-stylist-block__copy {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.ai-stylist-block__button {
+  width: fit-content;
+  border: 0;
+  border-radius: 999px;
+  background: #0f172a;
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  padding: 12px 18px;
+}
+
+.ai-stylist-block__file {
+  max-width: 100%;
+  border: 1px dashed rgba(15, 23, 42, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.84);
+  color: #334155;
+  font: inherit;
+  padding: 14px 16px;
+}
+
+.ai-stylist-block__results {
+  display: grid;
+  gap: 12px;
+}
+
+.ai-stylist-block__card {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 16px;
+}
+
+.ai-stylist-block__meta {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.ai-stylist-block__status {
+  color: #475569;
+  font-size: 14px;
+}
+
+.ai-stylist-block__image {
+  width: 100%;
+  border-radius: 18px;
+  display: block;
+  margin-top: 12px;
+}

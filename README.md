@@ -1,545 +1,218 @@
-## AI Outfit Stylist — Shopify App
+## AI Stylist
 
-**AI-powered merchandising engine that automatically generates outfit combinations and allows shoppers to visualize them on realistic avatars — including their own.**
+AI Stylist is a Shopify app in progress using:
 
-Transforms standard product pages into **visual styling engines** that drive higher revenue and engagement.
+- Next.js for the app server and admin UI
+- Supabase for database, storage, and AI-oriented backend services
+- Cloudflare Tunnel for local development URLs
+- a guest-first shopper model for profile and cart intent state
 
----
+## Current State
 
-## Overview
+The repository has been migrated away from Remix and now uses a root-level Next.js app.
 
-AI Outfit Stylist enhances Shopify product pages by:
+Already implemented:
 
-- **Increasing AOV**: Automatically builds complete looks that encourage multi-item carts.
-- **Improving conversion rate**: Reduces hesitation by letting shoppers see outfits on a model or themselves.
-- **Delivering personalization**: Tailors outfits and visuals to each shopper.
-- **Upgrading product pages**: From static images to an interactive styling experience.
+- guest-first browser shopper session model
+- guest profile and cart intent persistence
+- Next.js dashboard describing the chosen architecture
+- health endpoint at `/api/health`
+- merchant-only Shopify auth and billing gate
+- coupon-backed paid app activation flow
+- guest storefront APIs for product context, outfit generation, and add-on recommendations
+- storefront demo page at `/storefront-demo`
+- theme app extension scaffold for home, collection, and product blocks
+- PDP try-on API and demo flow at `/try-on-demo`
+- Supabase Storage buckets for try-on uploads and generated outputs
+- Supabase Edge Function scaffold for Gemini-powered try-on generation
 
-This is not just a recommendation widget — it is a **visual AI commerce engine**.
+Not implemented yet:
 
----
+- embedded admin App Bridge integration
+- live Shopify catalog ingestion into guest storefront APIs
+- real add-to-cart AJAX wiring from storefront recommendations
+- AI model-backed outfit generation beyond heuristic/demo ranking
+- real model-backed try-on generation provider integration
+- production secret wiring for the deployed Gemini try-on function
 
-## Core Capabilities
+## Cloudflare Dev Workflow
 
-- **AI Outfit Generation**
-  - Builds context-aware outfits from a merchant’s catalog.
-  - Uses product attributes and embeddings to find visually coherent combinations.
-- **Visual Try-On (2D)**
-  - Renders outfits on:
-    - **Default AI models** (no friction, no data needed).
-    - **Personalized avatars** (opt-in, privacy-focused).
-  - Uses **2D generative visualization**, not full 3D try-on (faster, cheaper, safer).
-- **Shopify Integration**
-  - Embeddable widget on product pages (e.g., “Complete the Look”, “Imagine on Me”).
-  - Adds multiple items to cart in a single flow.
-- **Cost & Performance Controls**
-  - Aggressive caching and reuse of generated images and avatars.
-  - Async generation to avoid blocking product page render.
+Run the Next.js app locally:
 
----
-
-## Tech Stack
-
-- **Backend & Hosting**: Railway (app server + background workers).
-- **BaaS**: Supabase (Postgres, auth, storage, row-level security).
-- **AI**: Gemini (embeddings, outfit reasoning, 2D image generation).
-- **Data & Assets**: Supabase storage and CDN in front of generated images.
-- **DevOps**: GitHub (source control, CI/CD to Railway).
-
----
-
-## High-Level Architecture
-
-### Architecture Diagram
-
-```mermaid
-flowchart LR
-  subgraph Shopify
-    sf[Shopify storefront]
-    sa[Shopify admin]
-  end
-
-  shopper[Shopper widget]
-  backend[App backend on Railway]
-  supabase[(Supabase)]
-  gemini[(Gemini AI)]
-  cdn[(Image CDN)]
-  github[(GitHub CI/CD)]
-
-  shopper <---> sf
-  sa --> backend
-  sf --> shopper
-
-  shopper --> backend
-  backend --> supabase
-  backend --> gemini
-  backend --> cdn
-
-  github --> backend
+```bash
+npm run dev:cloudflare
 ```
 
-### System Flow
+Start a Cloudflare tunnel in a second terminal:
 
-```mermaid
-flowchart TD
-  A[Merchant installs app] --> B[Catalog sync begins]
-  B --> C[AI attribute extraction]
-  C --> D[Outfit graph generated]
-  D --> E[Customer views product]
-  E --> F[Outfit widget appears]
-  F --> G[User clicks Imagine on Me]
-  G --> H[Avatar generated]
-  H --> I[Customer adds items to cart]
+```bash
+npm run start:cloudflare
 ```
 
-### Key Components
+Cloudflare will print a public URL such as:
 
-- **App Backend**
-  - Handles Shopify app install, authentication, and webhooks.
-  - Manages product catalog sync and outfit graph generation.
-  - Orchestrates image generation requests and caching.
-- **Outfit Engine**
-  - Maintains product embeddings and outfit relationships.
-  - Exposes APIs to fetch suggested outfits for a given product.
-- **Visualization Service**
-  - Selects/creates avatars.
-  - Calls 2D generative models to render outfits on avatars.
-  - Stores and serves generated images via CDN.
-- **Shopper Avatar Store**
-  - Secure, minimal storage of shopper avatar preferences and metadata.
-  - Links anonymized shopper tokens to avatar records.
-- **Frontend Widget**
-  - Embeddable UI on product pages.
-  - Triggers outfit selection, visualization, and add-to-cart.
-
----
-
-## Installation & Setup (High-Level)
-
-> Exact stack (Node/Remix, Ruby on Rails, etc.) is implementation-specific. This section focuses on conceptual steps.
-> This implementation assumes **Supabase**, **Gemini**, **Railway**, and **GitHub** as the primary platform choices.
-
-- **1. Create Shopify App**
-  - Set up an embedded app with OAuth.
-  - Request scopes for reading products, collections, and orders (for analytics).
-- **2. Catalog Sync**
-  - Subscribe to product and collection webhooks.
-  - Maintain a local product index for outfit generation.
-- **3. Theme / App Extension**
-  - Add a product page widget (theme app extension or ScriptTag-style injection).
-  - Ensure the widget can:
-    - Read the current product.
-    - Call backend APIs for outfits and visualizations.
-    - Add selected items to cart.
-- **4. Storage**
-  - Configure:
-    - Database for outfits, avatars, and usage.
-    - Object storage/CDN for generated images.
-- **5. AI / Image Provider**
-  - Connect to your chosen generative image provider (diffusion model, hosted API, etc.).
-  - Implement prompt templates and safety filters.
-
----
-
-## Merchant Onboarding & Catalog Scan
-
-After install, the app should **immediately show value** to the merchant.
-
-- Show a clear status message such as:  
-  **“Scanning your catalog — AI stylist ready in ~8 minutes.”**
-- This reassures merchants that:
-  - The app is working.
-  - Value is coming soon.
-  - They don’t need to configure everything manually.
-
-### Sequence: Install → Catalog Scan → Ready
-
-```mermaid
-sequenceDiagram
-  participant Merchant
-  participant Shopify
-  participant Backend as App Backend (Railway)
-  participant DB as Supabase (DB/Storage)
-  participant AI as Gemini (AI)
-
-  Merchant->>Shopify: Install AI Outfit Stylist app
-  Shopify->>Backend: OAuth callback + shop details
-  Backend->>DB: Create shop record
-  Backend-->>Merchant: "Scanning your catalog — AI stylist ready in ~8 minutes."
-
-  Backend->>Shopify: Fetch products in batches
-  Shopify-->>Backend: Product data
-
-  Backend->>AI: Generate embeddings + outfit suggestions
-  AI-->>Backend: Outfit graph / embeddings
-
-  Backend->>DB: Store products, outfits, avatar defaults
-  Merchant-->>Backend: Open app dashboard
-  Backend-->>Merchant: Show progress + "AI stylist ready" when complete
+```text
+https://something.trycloudflare.com
 ```
 
----
+Put that URL into `.env`:
 
-## Shopper Experience
-
-### Default Experience (Frictionless)
-
-1. Shopper views a product.  
-2. Widget shows **“Complete the Look”** and/or **“See it on a model”**.  
-3. When clicked, shopper sees the outfit on a **default AI model**:
-   - Gender-matched.
-   - Optional body-type presets:
-     - Slim
-     - Athletic
-     - Plus
-     - Regular
-4. Shopper can add multiple items (entire outfit) to cart.
-
-This should be the **default, zero-friction** experience.
-
-#### Flow Diagram: Default Shopper Journey
-
-```mermaid
-flowchart TD
-  A[Shopper views product page] --> B[Widget loads]
-  B --> C[Request outfit and default avatar]
-  C --> D[Render outfit image]
-  D --> E[Shopper selects items]
-  E --> F[Add items to Shopify cart]
-  F --> G[Shopper checks out]
+```dotenv
+SHOPIFY_APP_URL=https://something.trycloudflare.com
 ```
 
-### Personalized Experience (“Imagine On Me”)
+For Shopify CLI preview with the theme app extension included:
 
-1. Shopper clicks **“Imagine on Me”**.  
-2. A quick onboarding modal appears (target: **< 20 seconds**):
-   - Optional selfie upload.
-   - Height.
-   - Weight.
-   - Body shape.
-   - Skin tone.
-   - Gender.
-   - Optional fit preference (oversized / tailored).
-3. Avatar is generated and stored securely.
-4. Future outfits render on this avatar automatically.
-
-#### Sequence: “Imagine On Me” Request
-
-```mermaid
-sequenceDiagram
-  participant Shopper
-  participant Widget as Product Page Widget
-  participant Backend as App Backend (Railway)
-  participant DB as Supabase (Avatars/Outfits)
-  participant AI as Gemini (Avatar + Image)
-
-  Shopper->>Widget: Click "Imagine On Me"
-  Widget->>Shopper: Show onboarding modal (selfie + body data)
-  Shopper->>Widget: Submit avatar details
-  Widget->>Backend: Create/Update avatar profile
-  Backend->>DB: Store avatar metadata + selfie URL
-
-  Widget->>Backend: Request outfit image on this avatar
-  Backend->>DB: Check for cached personalized image
-  DB-->>Backend: Hit or miss
-  alt Cache miss
-    Backend->>AI: Generate avatar/outfit image
-    AI-->>Backend: Composite image
-    Backend->>DB: Store image metadata
-  end
-  Backend-->>Widget: Image URL
-  Widget-->>Shopper: Render outfit on personalized avatar
+```bash
+npm run dev:shopify
 ```
 
----
+This uses `shopify app dev` so the app and the `extensions/ai-stylist-storefront`
+theme app extension can be previewed together in the connected dev store theme.
 
-## Avatar Modes
+## Cloudflare Production Deployment
 
-### 1️⃣ Default Mode (MVP / Safe Mode)
+This repository is now prepared for production deployment to Cloudflare Workers
+using OpenNext.
 
-Used when the shopper has **not** provided personal data:
+Relevant files:
 
-- Show the outfit on an AI-generated model.
-- Automatically match gender.
-- Optionally allow shopper to choose a rough body-type preset.
-- Avatar library is **controlled and consistent**:
-  - Gender.
-  - Broad ethnicity range.
-  - Body type.
-  - Fixed, commerce-friendly poses.
+- `wrangler.jsonc`
+- `open-next.config.ts`
+- `.github/workflows/deploy.yml`
+- `public/_headers`
 
-**Why this matters:**
+Core deployment commands:
 
-- Zero onboarding friction.
-- Fast, reliable visuals.
-- Consistent brand feel.
+```bash
+npm run preview
+npm run deploy:cloudflare
+```
 
-This is the **first mode you should ship**.
+## GitHub Auto-Deploy Flow
 
-### 2️⃣ Personalized Mode
+The GitHub Actions workflow at `.github/workflows/deploy.yml` is designed to:
 
-Activated only when a shopper **explicitly opts in** by providing data/selfie:
+1. install dependencies
+2. run lint and build checks
+3. build the OpenNext Cloudflare bundle
+4. deploy to Cloudflare
+5. create a GitHub release
+6. optionally run `shopify app deploy` if Shopify CLI credentials are present
 
-- Data should be **minimal and purposeful**.
-- Use anonymized tokens instead of direct identifiers where possible.
-- Make it easy to:
-  - Delete the avatar.
-  - Opt out of personalization later.
+### Required GitHub secrets
 
----
+For Cloudflare deployment:
 
-## Visualization Architecture
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
 
-### Strategy
+For optional Shopify deploy:
 
-- **Do NOT start with 3D try-on.**
-  - 3D is expensive, slow to ship, and deep-tech heavy.
-- Start with **2D generative outfit visualization**:
-  - Faster to iterate.
-  - Much cheaper to run.
-  - Good enough for most fashion commerce use cases.
+- `SHOPIFY_CLI_PARTNERS_TOKEN`
 
-### Pipeline
+### Shopify production note
 
-Outfit selected  
-↓  
-Base avatar chosen  
-↓  
-Garment(s) layered / rendered via AI  
-↓  
-Final composite generated and cached
+The Shopify deploy step in CI assumes you will create and link a production app
+configuration file before using automated deploys. The current workflow calls:
 
-### Technical Paths
+```bash
+shopify app deploy --config production --allow-updates
+```
 
-- **Path A — Diffusion-Based Generation**
-  - Prompt-based generation of a model wearing the outfit.
-  - **Pros**: Flexible, high realism.  
-  - **Cons**: Requires careful prompt design, style control, and safety checks.
+So before enabling the Shopify step, create the production-linked config locally
+with Shopify CLI and commit that production config file.
 
-- **Path B — Garment Overlay (Later Optimization)**
-  - Segment garments from product images and overlay them onto avatars.
-  - **Pros**: More deterministic, higher SKU fidelity.  
-  - **Cons**: More complex segmentation + compositing pipeline.
+### Stable production URL
 
-Start with **Path A**, then evolve toward Path B as the product matures.
+For production, `SHOPIFY_APP_URL` should point to your stable Cloudflare-hosted
+domain, not a temporary tunnel URL.
 
----
+Example:
 
-## Prompt Design Guidelines
+```dotenv
+SHOPIFY_APP_URL=https://app.aistylist.com
+```
 
-Avoid vague prompts like:
+## Local Checks
 
-> Person wearing stylish outfit
+Run lint:
 
-Prefer **structured, deterministic** prompts using model and outfit attributes:
+```bash
+npm run lint
+```
 
-> Generate a realistic ecommerce fashion photo.  
->  
-> Model attributes:  
-> - gender: female  
-> - body type: athletic  
-> - skin tone: medium  
->  
-> Outfit:  
-> - white oversized shirt  
-> - beige trousers  
-> - white sneakers  
->  
-> Pose: standing, neutral background, studio lighting
+Run a production build:
 
-**Consistency > creativity.** The goal is commercial clarity, not art experimentation.
+```bash
+npm run build
+```
 
----
+Run both:
 
-## Data Model: Shopper Avatars
-
-Recommended table: `shopper_avatars`
+```bash
+npm run check
+```
 
-| Field         | Type      | Notes                                     |
-|--------------|-----------|-------------------------------------------|
-| id           | uuid      | Primary key                               |
-| shop_id      | uuid      | Shopify shop reference                    |
-| shopper_token| text      | Anonymized shopper token (non-PII)        |
-| height       | numeric   | Optional                                  |
-| weight       | numeric   | Optional                                  |
-| body_shape   | text      | e.g., slim / athletic / plus / regular    |
-| skin_tone    | text      | Normalized categories                     |
-| gender       | text      | Shopper self-identification               |
-| selfie_url   | text      | Storage URL (if selfie is used)          |
-| created_at   | timestamp | Creation time                             |
+## Health Endpoint
 
-**Important:**  
-Use **anonymized shopper tokens**. Avoid storing direct PII (name, email, etc.) whenever possible.
+Once local dev is running, verify the app responds at:
 
----
+- `http://127.0.0.1:3000/api/health`
 
-## Privacy & Compliance
+Expected JSON:
 
-This feature touches **sensitive visual and profile data**. Treat it with caution.
+```json
+{
+  "ok": true,
+  "app": "AI Stylist",
+  "framework": "nextjs",
+  "backend": "supabase",
+  "tunnel": "cloudflare"
+}
+```
 
-### Must Do
+## Next Steps
 
-- **Explicit consent**:
-  - Clear explanation of what’s generated and stored.
-  - Checkbox or equivalent explicit opt-in for personalized avatars.
-- **Easy deletion**:
-  - Provide a clear way to delete avatars and related data.
-- **Data minimization**:
-  - Only store what’s required for avatar rendering.
-  - Prefer anonymous or pseudonymous identifiers.
-- **Transparent AI usage**:
-  - Clearly state that images are AI-generated visualizations.
+1. Add Shopify auth/session handling in Next.js.
+2. Wire Supabase config and shared data clients.
+3. Create a production Shopify config file for CI deploys.
+4. Build the embedded admin shell and merchant settings pages.
+5. Add storefront-facing APIs for outfit generation and cart intent.
+6. Install the theme app extension blocks into the dev theme and point them at the app URL.
 
-### Avoid
+## Storefront Block Testing
 
-- Face recognition or identity inference.
-- Biometric or medical claims based on body shape or image.
-- Implying exact sizing/fit guarantees from visuals.
+The repository now includes a theme app extension scaffold at:
 
-Position the feature as **visual personalization**, not biometric analysis.
+- `extensions/ai-stylist-storefront`
 
----
+Available blocks:
 
-## When NOT to Generate Images
+- home recommendation block
+- collection outfit block
+- product detail outfit block
 
-To protect UX, costs, and brand trust, **skip or defer generation** when:
+The current recommended storefront feature path is now the PDP try-on flow:
 
-- The product has **no clean, high-quality image**.
-- Outfit confidence is low (weak recommendations, low compatibility score).
-- Garments **visually clash** in style, color, or category.
-- The generation **queue is overloaded** or GPU resources are constrained.
+1. add the product detail AI Stylist block to a product template
+2. click `Try on me`
+3. upload a shopper selfie
+4. store the selfie in Supabase Storage
+5. generate a preview image for the current product
+6. store the generated result in Supabase Storage
 
-In these cases:
+Current storage buckets:
 
-- Fallback to:
-  - Default static product imagery, or
-  - A simple, non-AI “Complete the Look” layout without generated avatars.
-- Never show **broken, obviously incorrect, or low-quality AI**.
+- `try-on-inputs` for uploaded shopper images
+- `try-on-results` for generated try-on outputs
 
----
+Suggested local test sequence:
 
-## Cost Control Strategy
-
-Image generation can become the **largest variable expense**. Design for cost control from day one.
-
-- **Generate once, cache forever**
-  - For a given outfit + avatar configuration, generate a single image and reuse it.
-- **Reuse avatars**
-  - Shopper avatars should be generated sparingly and reused across sessions and outfits.
-- **Pre-generate popular outfits**
-  - Precompute for:
-    - Bestsellers.
-    - Top traffic product pages.
-    - High-conversion outfits.
-- **Async rendering**
-  - Do not generate on every page load.
-  - Use background jobs and queues.
-  - Show a default image first, then upgrade when ready.
-
----
-
-## Performance Strategy
-
-Performance is a **core product feature** for ecommerce.
-
-- **Never block product page rendering**
-  - The core product page should load normally even if the widget or images are not ready.
-- **Widget behavior**
-  - If generated image exists → show instantly.
-  - If not:
-    - Show default model or skeleton state.
-    - Trigger async generation in the background.
-- **Image optimizations**
-  - Use responsive images, compression, and CDN distribution.
-  - Prefer standard ecommerce aspect ratios and sizes.
-
-Speed → better conversions → happier merchants.
-
----
-
-## Development Roadmap
-
-### Phases 0–7 (Pre-Avatar)
-
-Earlier phases (core app, outfit engine, analytics, etc.) remain unchanged.  
-The avatar system is a **layer on top of a working revenue engine**, not the foundation.
-
-### Phase 8 — Default Model Visualization (High ROI)
-
-**Goal:** Add visual selling power without heavy complexity.
-
-- Build:
-  - Avatar template library (controlled set of default models).
-  - Outfit image generator (for default avatars).
-  - CDN storage and caching strategy.
-  - Widget toggle: **“See it on a model”**.
-
-Shipping this alone can significantly boost conversions and perceived app value.
-
-### Phase 9 — Shopper Avatar System
-
-**Goal:** Personalization layer on top of default visuals.
-
-- Build:
-  - Shopper onboarding modal.
-  - Secure avatar storage and retrieval.
-  - Personalized generation pipeline.
-  - Avatar reuse logic across sessions and outfits.
-
-Start simple; avoid perfectionism in v1.
-
-### Phase 10 — Optimization
-
-- Cache aggressively at every layer.
-- Pre-generate top outfits and avatars.
-- Compress and version images.
-- Implement robust generation queues and backpressure.
-
-The goal is to protect margins while scaling usage.
-
----
-
-## MVP Guardrails
-
-**Do NOT launch with full “Imagine On Me” personalization first.**
-
-Recommended launch sequence:
-
-1. AI outfit generation.  
-2. Product page widget.  
-3. Revenue tracking and analytics.  
-4. Default model visualization.  
-5. Shopper avatars and personalization.
-
-Founders who invert this typically burn months on complex avatar tech before proving revenue impact.
-
----
-
-## Strategic Positioning
-
-Most Shopify stores still lack strong visual storytelling for outfits.
-
-By adding this app, merchants:
-
-- Upgrade from static product images to **interactive, AI-powered visuals**.
-- Move beyond commodity “customers also bought” widgets.
-- Enter the space of **next-generation visual commerce tools**.
-
-Long-term, the moat becomes:
-
-👉 **Visual commerce intelligence** — understanding what *looks* and *styles* actually convert.
-
----
-
-## Principles & Philosophy
-
-- **First become a revenue engine. Then become a visual engine.**
-- **Speed > perfection**:
-  - Ship the simplest valuable version first.
-- **Learning > architecture**:
-  - Optimize based on real merchant and shopper behavior.
-- **Adoption > features**:
-  - Focus on making setup easy and value obvious.
-
-You are building a foundational layer for **AI-native commerce**, not just another widget.
-
+1. Start the Next.js app and expose it with Cloudflare tunnel.
+2. Update `SHOPIFY_APP_URL` to the current public URL.
+3. Run `npm run dev:shopify`.
+4. Open the Shopify theme editor for the dev store.
+5. Add the AI Stylist blocks to home, collection, and product templates.
+6. Click the generate button inside each block and confirm recommendations render.
+7. On the PDP block, use the add-on buttons and verify items are posted to `/cart/add.js`.
